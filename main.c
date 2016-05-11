@@ -179,6 +179,7 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
             }
             printf("walker = %d, i = %d, walkto = %d\n", *walker, i, *walkto);
             i+= *walkto;
+            if(i > 400) return -1;
             walker = heap+i;
             printf("walker = %d, i = %d, walkto = %d\n", *walker, i, *walkto);
         }
