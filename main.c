@@ -230,7 +230,7 @@ void blocklist(){
             pointerSize = blockSize;
             pointerSize += (*blockSize*-1);
             //printf("pointerSize = %p\n", pointerSize);
-            printf("%d\t%s\t\t0x%p\t0x%p\n", *blockSize*-1, "no", blockSize, pointerSize);
+            printf("%d\t%s\t\t0x%p\t0x%p\n", *blockSize*-1, "no", blockSize, pointerSize-1);
             i += (*blockSize*-1);
             while(heap[i] == 0){    //override code, ensures that if block end does not line up with block beginning, block will not print
                 i++;
@@ -241,7 +241,7 @@ void blocklist(){
             pointerSize = blockSize;
             pointerSize+= *blockSize;
             //printf("pointerSize = %p\n", pointerSize);
-            printf("%d\t%s\t\t0x%p\t0x%p\n", *blockSize, "yes", blockSize, pointerSize);
+            printf("%d\t%s\t\t0x%p\t0x%p\n", *blockSize, "yes", blockSize, pointerSize-1);
             i += (*blockSize);
              while(heap[i] == 0){
                 i++;
