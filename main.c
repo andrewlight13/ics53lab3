@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     for(i=0;i<100;i++){
         heap[i] = 0;  //just setting everything to an arbitrary value for testing purposes
     }
-    printf("start of heap: 0x%p, 15th byte in heap: 0x%p\n", heap, heap+15);    //here's how to print addresses
+    printf("start of heap: 0x%p, end of heap: 0x%p\n", heap, heap+HEAPSIZE);    //here's how to print addresses
     int exit_check = 1;
     int parseStatus;
 
@@ -51,9 +51,9 @@ int main(int argc, char *argv[])
             if(parseStatus == 1 && param[0] != NULL){
                 int status;
                 status = allocate(param[0]);
-                for(i = 0; i < 40; i++){
+                /*for(i = 0; i < 40; i++){
                     printf("%d\n", heap[i]);
-                }
+                }*/
                 printf("parseStatus has exited, with return status = %d\n", status);
             }
             else if(parseStatus == 2 && param[0] != NULL){
@@ -142,7 +142,7 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
                     walker = heap+i+toalloc+HEADERSIZE;
                     printf("walkto = %d\n", *walkto);
                     printf("i = %d\n", i);
-                    if(-*walkto+ i == 400){ //if this is the last block in the chain (so far), write to end of chain
+                    if(-*walkto+ i == HEAPSIZE){ //if this is the last block in the chain (so far), write to end of chain
                         *(walker) = *walkto+(toalloc+HEADERSIZE);
                         printf("walker = %d\n", *walker);
                     }
@@ -150,8 +150,21 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
                         int temp = -*walkto;
                         short *intermed = walker;
                         printf("YUP ITS WORKING %d\n", temp);
-                        if(temp-(toalloc+HEADERSIZE) <= HEADERSIZE){
-                            //do nothing
+                        printf("OK WHAT %d\n", temp-(toalloc+HEADERSIZE));
+                        if(temp-(toalloc+HEADERSIZE) == 0){
+                            //if allocating something with same block size, do nothing
+                            printf("THIS WAS ENTERED 0x%p, 0x%p\n",walkto, intermed);
+                        }
+                        else if(temp-(toalloc+HEADERSIZE) <= HEADERSIZE){
+                            char *overwrite;
+                            int j;
+                            printf("NOW WAS ENTERED INSTEAD 0x%p, 0x%p\n",walkto, intermed);
+                            overwrite = intermed;
+                            for(j=0; j < temp-(toalloc+HEADERSIZE); j++){
+                                overwrite = overwrite+j;
+                                *overwrite = 0;         //fills any empty space between blocks with zeroes
+                                overwrite = intermed;
+                            }
                         }
                         else{
                             printf("temp= %d\n", temp);
@@ -163,6 +176,7 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
                     return highBlock;
                 }
                 else if(*walker>(toalloc*-1)-HEADERSIZE){    //if found unallocated block, but it's smaller
+                    if(-*walker+ i == HEAPSIZE) return -1;      //alright, that should fix the lingering issues with this function
                     printf("%WALKTOIN:%d\n", *walkto);
                     printf("WALKER:%d\n", *walker);
                     *walkto = *walker*-1;        //continue around loop using the unallocated space as indicator
@@ -179,7 +193,10 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
             }
             printf("walker = %d, i = %d, walkto = %d\n", *walker, i, *walkto);
             i+= *walkto;
-            if(i > 400) return -1;
+            while(heap[i] == 0){
+                i++;
+            }
+            if(i > HEAPSIZE) return -1;
             walker = heap+i;
             printf("walker = %d, i = %d, walkto = %d\n", *walker, i, *walkto);
         }
@@ -198,10 +215,40 @@ void freeBlock(char *blockNum){ //since first block is supposed to be block 1, a
     }
 }
 void blocklist(){
-    char* c = heap[1];
-    printf("%c\n", c);
-    c = heap[2];
-    printf("%c\n", c);
+    int i=0;
+    short *blockSize;
+    char *pointerSize;
+    blockSize = heap;
+    if(*blockSize == 0){
+        printf("No Blocks Allocated \n");
+        return;
+    }
+    printf("%s\t%s\t%s\t\t%s\n", "Size", "Allocated", "Start", "End");
+    while(i < HEAPSIZE){    //while still in heap
+        blockSize = heap+i;
+        if(*blockSize < 0){ //if block is unallocated
+            pointerSize = blockSize;
+            pointerSize += (*blockSize*-1);
+            //printf("pointerSize = %p\n", pointerSize);
+            printf("%d\t%s\t\t0x%p\t0x%p\n", *blockSize*-1, "no", blockSize, pointerSize);
+            i += (*blockSize*-1);
+            while(heap[i] == 0){    //override code, ensures that if block end does not line up with block beginning, block will not print
+                i++;
+            }
+            //printf("i is now %d\n", i);
+        }
+        else{   //otherwise if block allocated, same thing without negation
+            pointerSize = blockSize;
+            pointerSize+= *blockSize;
+            //printf("pointerSize = %p\n", pointerSize);
+            printf("%d\t%s\t\t0x%p\t0x%p\n", *blockSize, "yes", blockSize, pointerSize);
+            i += (*blockSize);
+             while(heap[i] == 0){
+                i++;
+            }
+            //printf("i is now %d\n", i);
+        }
+    }
 }
 void writeheap(char *blockNum, char *writechar, char *amount){
     int block = atoi(blockNum), number = atoi(amount);
