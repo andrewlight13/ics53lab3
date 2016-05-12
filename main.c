@@ -138,6 +138,7 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
                     blockNum+=2;
                     highBlock++;
                     *blockNum = highBlock;
+                    printf("WALKER = 0x%p\n", walker);
                     walker = heap+i+toalloc+HEADERSIZE;
                     printf("walkto = %d\n", walkto);
                     printf("i = %d\n", i);
@@ -155,15 +156,9 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
                             printf("THIS WAS ENTERED 0x%p, 0x%p\n",walkto, intermed);
                         }
                         else if(temp-(toalloc+HEADERSIZE) <= HEADERSIZE){
-                            char *overwrite;
-                            int j;
-                            printf("NOW WAS ENTERED INSTEAD 0x%p, 0x%p\n",walkto, intermed);
-                            overwrite = intermed;
-                            for(j=0; j < temp-(toalloc+HEADERSIZE); j++){
-                                overwrite = overwrite+j;
-                                *overwrite = 0;         //fills any empty space between blocks with zeroes
-                                overwrite = intermed;
-                            }
+                            intermed = heap+i;
+                            printf("INTERMED NOW = 0x%p\n", intermed);
+                            *intermed = temp;
                         }
                         else{
                             printf("temp= %d\n", temp);
@@ -231,9 +226,6 @@ void blocklist(){
             //printf("pointerSize = %p\n", pointerSize);
             printf("%d\t%s\t\t0x%p\t0x%p\n", *blockSize*-1, "no", blockSize, pointerSize-1);
             i += (*blockSize*-1);
-            while(heap[i] == 0){    //override code, ensures that if block end does not line up with block beginning, block will not print
-                i++;
-            }
             //printf("i is now %d\n", i);
         }
         else{   //otherwise if block allocated, same thing without negation
