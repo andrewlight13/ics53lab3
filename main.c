@@ -103,7 +103,7 @@ int parseInput(char *input){
 int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 5, allocate 3, free 1, allocate 3, allocate 1
     int toalloc = atoi(size);
     int i, allocated;
-    short *sizeptr, *walkto, *walker;
+    short *sizeptr, walkto, *walker;
     char *blockNum;
     if(toalloc <= 0 || toalloc > HEAPSIZE){    //converts input to integer and stores as such (be careful about checking/printing these, cast headers as ints
         printf("unrecognized input, please reenter\n");
@@ -124,30 +124,29 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
     else{
         //walk up list, looking for space to allocate
         i=0;
-        walkto = malloc(sizeof(int));
         walker = heap;
-        *walkto = *walker;
+        walkto = *walker;
         allocated = 0;
         while(allocated == 0){
             if(*walker < 0){
                 printf("wait what\n");
                 if(*walker<=(toalloc*-1)-HEADERSIZE){         //if space available in this block (or rest of list if at end of chain) is less than block size you're attempting to allocate, assign to that block
                     printf("negative allocation entered, heap=%d, toalloc=%d\n", heap[i], toalloc);
-                    *walkto = *walker;
+                    walkto = *walker;
                     *walker = toalloc+HEADERSIZE;
                     blockNum = (char*)walker;
                     blockNum+=2;
                     highBlock++;
                     *blockNum = highBlock;
                     walker = heap+i+toalloc+HEADERSIZE;
-                    printf("walkto = %d\n", *walkto);
+                    printf("walkto = %d\n", walkto);
                     printf("i = %d\n", i);
-                    if(-*walkto+ i == HEAPSIZE){ //if this is the last block in the chain (so far), write to end of chain
-                        *(walker) = *walkto+(toalloc+HEADERSIZE);
+                    if(-walkto+ i == HEAPSIZE){ //if this is the last block in the chain (so far), write to end of chain
+                        *(walker) = walkto+(toalloc+HEADERSIZE);
                         printf("walker = %d\n", *walker);
                     }
                     else{   //otherwise, fill block and split if needed
-                        int temp = -*walkto;
+                        int temp = -walkto;
                         short *intermed = walker;
                         printf("YUP ITS WORKING %d\n", temp);
                         printf("OK WHAT %d\n", temp-(toalloc+HEADERSIZE));
@@ -177,28 +176,28 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
                 }
                 else if(*walker>(toalloc*-1)-HEADERSIZE){    //if found unallocated block, but it's smaller
                     if(-*walker+ i == HEAPSIZE) return -1;      //alright, that should fix the lingering issues with this function
-                    printf("%WALKTOIN:%d\n", *walkto);
+                    printf("%WALKTOIN:%d\n", walkto);
                     printf("WALKER:%d\n", *walker);
-                    *walkto = *walker*-1;        //continue around loop using the unallocated space as indicator
-                    printf("WALKTO:%d\n",*walkto);
+                    walkto = *walker*-1;        //continue around loop using the unallocated space as indicator
+                    printf("WALKTO:%d\n",walkto);
                 }
             }
             else if(*walker > 0){
                 printf("entered here\n");
-                *walkto = *walker;
+                walkto = *walker;
             }
             else if(*walker == 0){
                 printf("ok something went wrong, you shouldn't be here, i'll just return for now\n");
                 return -1;
             }
-            printf("walker = %d, i = %d, walkto = %d\n", *walker, i, *walkto);
-            i+= *walkto;
+            printf("walker = %d, i = %d, walkto = %d\n", *walker, i, walkto);
+            i+= walkto;
             while(heap[i] == 0){
                 i++;
             }
             if(i > HEAPSIZE) return -1;
             walker = heap+i;
-            printf("walker = %d, i = %d, walkto = %d\n", *walker, i, *walkto);
+            printf("walker = %d, i = %d, walkto = %d\n", *walker, i, walkto);
         }
 
     }
