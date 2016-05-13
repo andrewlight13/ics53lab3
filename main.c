@@ -105,9 +105,9 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
     int i, allocated;
     short *sizeptr, walkto, *walker;
     char *blockNum;
-    if(toalloc <= 0 || toalloc > HEAPSIZE){    //converts input to integer and stores as such (be careful about checking/printing these, cast headers as ints
+    if(toalloc <= 0 || toalloc > HEAPSIZE-HEADERSIZE){    //converts input to integer and stores as such (be careful about checking/printing these, cast headers as ints
         printf("unrecognized input, please reenter\n");
-        return;  //i'll probably restructure this later
+        return -2;  //i'll probably restructure this later
     }
     if(heap[0] == 0){      //if first allocation, just allocate it without setting up loops
         sizeptr = heap;
@@ -115,8 +115,11 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
         //printf("sizeptr = %d\n", *sizeptr);
         highBlock++;
         heap[HEADERSIZE-1] = highBlock;
+        if(HEAPSIZE-toalloc-HEADERSIZE <= HEADERSIZE){
+            *sizeptr = HEAPSIZE;
+        }
         sizeptr = heap+toalloc+HEADERSIZE;
-        *sizeptr = (HEAPSIZE-toalloc-HEADERSIZE)*-1;
+        *sizeptr = (HEAPSIZE-toalloc-HEADERSIZE)*-1;    //FIX THIS SO IT DOESN'T ALLOCATE BLOCK 3 AT END OF LIST
         printf("sizeptr = %d\n", *sizeptr);
         return highBlock;
         //heap[toalloc+2] = (HEAPSIZE-toalloc)*-1;    //negative numbers represent unallocated blocks
@@ -143,8 +146,20 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
                     printf("walkto = %d\n", walkto);
                     printf("i = %d\n", i);
                     if(-walkto+ i == HEAPSIZE){ //if this is the last block in the chain (so far), write to end of chain
-                        *(walker) = walkto+(toalloc+HEADERSIZE);
-                        printf("walker = %d\n", *walker);
+                        if(-walkto-(toalloc+HEADERSIZE) <= HEADERSIZE){
+                            short *intermed = walker;
+                            intermed = heap+i;
+                            printf("INTERMED NOW = 0x%p\n", intermed);
+                            *intermed = -walkto;
+                            printf("THIS SHOULD FAIL\n");
+                            printf("changing %d to %d at address 0x%p", *(walker), walkto+(toalloc+HEADERSIZE), walker);
+                        }
+                        else{
+                            printf("WAIT WHAT\n");
+                            printf("CHECKING THAT %d IS LESS THAN %d\n", -walkto+(toalloc+HEADERSIZE), HEADERSIZE);
+                            *(walker) = walkto+(toalloc+HEADERSIZE);
+                            printf("walker = %d\n", *walker);
+                        }
                     }
                     else{   //otherwise, fill block and split if needed
                         int temp = -walkto;
@@ -198,15 +213,37 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
     }
 }
 void freeBlock(char *blockNum){ //since first block is supposed to be block 1, atoi is fine
-    printf("%s\n", blockNum);
+    short *blockPoint;
+    char *num;
+    short block = (short)atoi(blockNum);
+    printf("block = %d\n", block);
+    int i = 0;
+    while(i < 400-HEADERSIZE){
+        blockPoint = heap+i;
+        num = blockPoint;
+        num += 2;
+        if(*num == block && *blockPoint>0){
+            *blockPoint = *blockPoint*-1;
+            return;
+        }
+        else{
+            if(*blockPoint>0){
+                i+=*blockPoint;
+            }
+            else{
+                i+=*blockPoint*-1;
+            }
+        }
+    }
+    /*printf("%s\n", blockNum);
     int i = atoi(blockNum); //this function should be pretty simple, just loop through til you find a block with this number, then negate the allocation size
     printf("%d\n", i);
     short *lol; //test code for allocate, delete
-    lol = heap;
+    lol = heap+11;
     *lol = -10;
     for(i = 0; i < 20; i++){
         printf("%d\n", heap[i]);
-    }
+    }*/
 }
 void blocklist(){
     int i=0;
