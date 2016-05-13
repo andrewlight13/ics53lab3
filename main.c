@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 {
     heap = malloc(sizeof(char)*HEAPSIZE);   //heap allocated HEAPSIZE bytes (heapsize defaults to 400 since that's what Prof. specified
     int i;
-    for(i=0;i<100;i++){
+    for(i=0;i<HEAPSIZE;i++){
         heap[i] = 0;  //just setting everything to an arbitrary value for testing purposes
     }
     printf("start of heap: 0x%p, end of heap: 0x%p\n", heap, heap+HEAPSIZE);    //here's how to print addresses
@@ -51,10 +51,11 @@ int main(int argc, char *argv[])
             if(parseStatus == 1 && param[0] != NULL){
                 int status;
                 status = allocate(param[0]);
-                /*for(i = 0; i < 40; i++){
+                printf("~allocate has exited, with return status = %d\n", status);
+                int i;
+                for(i=0; i < 30; i++) {
                     printf("%d\n", heap[i]);
-                }*/
-                printf("parseStatus has exited, with return status = %d\n", status);
+                }
             }
             else if(parseStatus == 2 && param[0] != NULL){
                 freeBlock(param[0]);
@@ -101,13 +102,17 @@ int parseInput(char *input){
     return 0;
 }
 int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 5, allocate 3, free 1, allocate 3, allocate 1
+    if(size == NULL) {
+        printf("No parameter given. Please reenter.\n");
+        return -1;
+    }
     int toalloc = atoi(size);
     int i, allocated;
     short *sizeptr, walkto, *walker;
     char *blockNum;
     if(toalloc <= 0 || toalloc > HEAPSIZE){    //converts input to integer and stores as such (be careful about checking/printing these, cast headers as ints
         printf("unrecognized input, please reenter\n");
-        return;  //i'll probably restructure this later
+        return -2;  //i'll probably restructure this later
     }
     if(heap[0] == 0){      //if first allocation, just allocate it without setting up loops
         sizeptr = heap;
@@ -115,6 +120,9 @@ int allocate(char *size){   //TEST CASE FOR THIS FUNCTION: allocate 7, allocate 
         //printf("sizeptr = %d\n", *sizeptr);
         highBlock++;
         heap[HEADERSIZE-1] = highBlock;
+
+        sizeptr = heap+2;
+        *sizeptr = (short)highBlock++;
         sizeptr = heap+toalloc+HEADERSIZE;
         *sizeptr = (HEAPSIZE-toalloc-HEADERSIZE)*-1;
         printf("sizeptr = %d\n", *sizeptr);
@@ -241,14 +249,63 @@ void blocklist(){
         }
     }
 }
+
+
 void writeheap(char *blockNum, char *writechar, char *amount){
     int block = atoi(blockNum), number = atoi(amount);
     char writer = writechar[0];
+    int i=0;
+    short *blockSize;
+    blockSize = heap;
+
     if(block == 0 || number == 0){
-        printf("wrong command order, add actual error messages\n");
+        printf("ERROR: INVALID WRITE REQUEST.\n");
+    }
+    else if (block > highBlock) {
+        printf("ERROR: Block has not been allocated yet.\n");
     }
     else{
-        printf("you will be writing %c to block %d, %d times\n", writer, block, number);
+        //printf("you will be writing %c to block %d, %d times\n", writer, block, number);
+        if(*blockSize == 0){
+            printf("No Blocks Allocated \n");
+            return;
+        }
+        short *blockNum;
+        while(i < HEAPSIZE) {
+            blockSize = heap+i;
+            blockNum = heap+(i+2);
+            //blockNum = (*blockNum);
+            printf("BLOCK#%d, SIZE:%d\n", *blockNum, *blockSize);
+            if(*blockSize > 0){ //if block is allocated
+                if(*blockNum == block) {
+                    if(number > ((*blockSize) - 3) ) { printf("ERROR: Cannot write. Not enough blocks allocated.\n"); return; }
+                    int c;
+                    for(c=0; c<number;c++) {
+                        short *fill = heap+i+3+c;
+                        *(fill) = writer;
+                    }
+                    return;
+                }
+
+                i += (*blockSize);
+                while(heap[i] == 0){    //override code, ensures that if block end does not line up with block beginning, block will not print
+                    i++;
+                }
+            }
+            else if(*blockSize == 0) {
+                break;
+            }
+            else{
+                i += (*blockSize*-1);
+                while(heap[i] == 0){
+                    i++;
+                }
+            }
+        }
+
+        if(block <= highBlock) {
+            printf("ERROR: Requested block no longer allocated.\n");
+        }
     }
 }
 void printheap(char *blockNum, char *amount){
