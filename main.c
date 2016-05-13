@@ -270,14 +270,16 @@ void writeheap(char *blockNum, char *writechar, char *amount){
             printf("No Blocks Allocated \n");
             return;
         }
-        short *blockNum;
+        //short *blockNum;
+        //blockNum = heap;
         while(i < HEAPSIZE) {
             blockSize = heap+i;
-            blockNum = heap+(i+2);
+            //blockNum = heap+(i+2);
             //blockNum = (*blockNum);
-            printf("BLOCK#%d, SIZE:%d\n", *blockNum, *blockSize);
+            int blockNum = heap[i+2];
+            //printf("BLOCK#%d, SIZE:%d\n", *blockNum, *blockSize);
             if(*blockSize > 0){ //if block is allocated
-                if(*blockNum == block) {
+                if(blockNum == block) {
                     if(number > ((*blockSize) - 3) ) { printf("ERROR: Cannot write. Not enough blocks allocated.\n"); return; }
                     int c;
                     for(c=0; c<number;c++) {
