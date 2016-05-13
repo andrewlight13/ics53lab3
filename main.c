@@ -368,11 +368,14 @@ void printheap(char *blockNum, char *amount){
 
             if(*blockSize > 0){ //if block is allocated
                 if(blockNum == block) {
-                    if(number > ((*blockSize) - 3) ) { printf("ERROR: Cannot read. There are not %d bytes in block %d.\n", number, blockNum); return; }
+                    //if(number > ((*blockSize) - 3) ) { printf("ERROR: Cannot read. There are not %d bytes in block %d.\n", number, blockNum); return; }
                     int c;
                     for(c=0; c<number;c++) {
-                        short *fill = heap+i+3+c;
-                        printf("%c", *fill);
+                        char *fill = heap+i+3+c;
+                        if(*fill == 0) printf("(null)");
+                        else if(*fill <= 8 && *fill >= 0) printf("_%d", *fill);
+                        else printf("%c", *fill);  //added pipes around characters since we'll be printing null chars
+                        //printf("|%d|", *fill);
                     }
                     printf("\n");
                     return;
