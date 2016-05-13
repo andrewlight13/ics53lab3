@@ -372,8 +372,7 @@ void printheap(char *blockNum, char *amount){
                     int c;
                     for(c=0; c<number;c++) {
                         char *fill = heap+i+3+c;
-                        if(*fill == 0) printf("(null)");
-                        else if(*fill <= 8 && *fill >= 0) printf("_%d", *fill);
+                        if(*fill <= 31 && *fill >= 0) printf("_%d", *fill);    //if characters are special chars, just fill in actual value instead of ascii value
                         else printf("%c", *fill);  //added pipes around characters since we'll be printing null chars
                         //printf("|%d|", *fill);
                     }
